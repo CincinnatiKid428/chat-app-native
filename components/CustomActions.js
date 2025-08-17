@@ -1,3 +1,5 @@
+//components/CustomActions.js
+
 import { StyleSheet, View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useState } from 'react';
 import { useActionSheet } from '@expo/react-native-action-sheet';
@@ -54,8 +56,14 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
   const pickImage = async () => {
     let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissions?.granted) {
-      let result = await ImagePicker.launchImageLibraryAsync();
-      if (!result.canceled) uploadAndSendImage(result.assets[0].uri);
+      try {
+        let result = await ImagePicker.launchImageLibraryAsync();
+        if (!result.canceled && result.assets && result.assets.length > 0)
+          uploadAndSendImage(result.assets[0].uri);
+      } catch (err) {
+        console.error("Media library error:", err);
+        Alert.alert("An error occurred while choosing a photo.");
+      }
     }
     else Alert.alert("Permissions for library access not granted.");
   }
@@ -64,10 +72,18 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
   const takePhoto = async () => {
     let permissions = await ImagePicker.requestCameraPermissionsAsync();
     if (permissions?.granted) {
-      let result = await ImagePicker.launchCameraAsync();
-      if (!result.cancelled) uploadAndSendImage(result.assets[0].uri);
+      try {
+        const result = await ImagePicker.launchCameraAsync();
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+          uploadAndSendImage(result.assets[0].uri);
+        }
+      } catch (err) {
+        console.error("Camera error:", err);
+        Alert.alert("An error occurred while taking the photo.");
+      }
+    } else {
+      Alert.alert("Permissions for camera access not granted.");
     }
-    else Alert.alert("Permissions for camera access not granted.")
   };
 
   //Allows user to send their location
